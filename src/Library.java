@@ -30,7 +30,7 @@ public class Library {
         books.add(book10);
 
         //create user
-        User user1 = new User("Yuvraj","yuvi555", "gmail");
+        User user1 = new User("Yuvraj", "gmail");
         // show available options - show books - borrow books - return books  - exit application
         showMenu();
        while (true){
