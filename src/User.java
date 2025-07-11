@@ -3,9 +3,10 @@ public class User {
     private String contact;
     private int borrowCount = 0;
 
-    public User(String username, String contact){
+    public User(String username, String contact, int borrowCount){
         this.username = username;
         this.contact = contact;
+        this.borrowCount = borrowCount;
     }
 
 
