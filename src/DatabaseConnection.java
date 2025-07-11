@@ -8,12 +8,11 @@ public class DatabaseConnection {
     private final static String dbName = "librarydb";
     private final static String path = "jdbc:mysql://localhost:3306/"+dbName ;
     private final static String username = "root";
-    private final static String password = "root";
+    private final static String password = "";
 
     public static Connection connect() throws SQLException, ClassNotFoundException {
 //        class.forName("com.mysql.cj.jdbc.Driver");
-        Connection connection = DriverManager.getConnection(path, username, password);
-        return  connection;
+        return DriverManager.getConnection(path, username, password);
     }
 
 }
