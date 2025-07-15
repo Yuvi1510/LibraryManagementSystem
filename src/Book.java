@@ -1,4 +1,5 @@
 public class Book {
+    private int id;
     private int bookNumber;
     private String name;
     private int quantity;
@@ -14,6 +15,14 @@ public class Book {
 
 
     // getter and setter
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public int getBookNumber() {
         return bookNumber;
     }

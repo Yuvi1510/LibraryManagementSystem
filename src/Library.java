@@ -1,45 +1,27 @@
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Library {
     static List<Book> books = new ArrayList<>();
+    static Scanner input = new Scanner(System.in);
 
     public static void main(String[] args)  {
         try {
             Connection connection = DatabaseConnection.connect();
 
-//            Book book1 = new Book(101, "Atomic Habits", 50, "James Clear");
-//            insertBooks(connection, book1);
-//              Book book2 = new Book(102, "Rich Dad Poor Dad", 45, "Robert Kiyosaki");
-//            insertBooks(connection, book2);
+            Book book = BookMethods.getBookByBookNumber(connection,105);
+            System.out.println("book id: " + book.getId());
+            System.out.println("book number: "+book.getBookNumber());
+            System.out.println("book name: "+ book.getName());
+            System.out.println("book quantity: "+book.getQuantity());
+            System.out.println("book author: "+book.getAuthor());
+            System.out.println("_________________________________________________________");
+            System.out.println("_________________________________________________________");
 
-//            User user1 = new User("Yuvraj", "gmail",0);
-//            insertUser(connection, user1);
-
-
-            List<Book> books = selectBooks(connection);
-            for(Book book: books){
-                System.out.println("book number: "+book.getBookNumber());
-                System.out.println("book name: "+ book.getName());
-                System.out.println("book quantity: "+book.getQuantity());
-                System.out.println("book author: "+book.getAuthor());
-                System.out.println("_________________________________________________________");
-                System.out.println("_________________________________________________________");
-            }
-
-            List<User> users = selectUsers(connection);
-            for(User user: users){
-                System.out.println("username: "+ user.getUsername());
-                System.out.println("contact: "+ user.getContact());
-                System.out.println("borrow_count: "+ user.getBorrowCount());
-                System.out.println("_________________________________________________________");
-                System.out.println("_________________________________________________________");
-            }
+//            addUser(connection,input);
+            borrowBook(connection,input);
 
         }catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -47,78 +29,89 @@ public class Library {
 
     }
 
+    public static void borrowBook(Connection connection, Scanner input){
+        System.out.println("Enter book number: ");
+        int bookNumber = input.nextInt();
+        input.nextLine();
+        System.out.println("Enter username: ");
+        String username = input.nextLine();
 
+        try{
+            // get book by book number
+        Book book = BookMethods.getBookByBookNumber(connection, bookNumber);
+            System.out.println("Got the book");
+            // get user by their username
+       User user = UserMethods.getUserByUsername(connection, username);
+            System.out.println("Got the user");
 
-    public static List<User> selectUsers(Connection connection) throws SQLException {
-        List<User> users = new ArrayList<>();
-        String selectBook = "SELECT * FROM users";
-        PreparedStatement ps = connection.prepareStatement(selectBook);
-        ResultSet rs = ps.executeQuery();
+            // check if the book  is available
+        if(book.getQuantity() > 0){
+            // check if the user has already borrowed two books
+            if(user.getBorrowCount()<=2){
+                // if the book is available and user has not borrowed two books the
+                // allow to borrow
+                // insert the record
+                RecordMethods.insertRecord(connection, user.getId(), book.getId());
 
-        while(rs.next()){
-            String username = rs.getString("username");
-            String contact = rs.getString("contact");
-            int borrowCount = rs.getInt("borrow_count");
-            User user = new User(username, contact,borrowCount);
-            users.add(user);
+                // update the quantity of book
+                BookMethods.updateBookQuantity(connection, bookNumber, book.getQuantity() - 1);
+
+                //update the user by increasing its borrow count by 1
+                user.setBorrowCount(user.getBorrowCount() + 1);
+                if(UserMethods.updateUser(connection,user)){
+                    System.out.println("Thank You for borrowing! Please return it on time.");
+                }else {
+                    System.out.println("Something went wrong!");
+                }
+            }else{
+                System.out.println("Sorry, your borrowing limit has reached! (Borrowing limit = 2)");
+            }
+        }else {
+            System.out.println("Book is not available right now");
+        }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
 
-        return users;
     }
 
+    // add user
+    public static void addUser(Connection connection, Scanner input){
+        System.out.print("Enter username: ");
+        String username = input.nextLine();
+        System.out.print("Enter contact: ");
+        String contact = input.nextLine();
 
-    public static List<Book> selectBooks(Connection connection) throws SQLException {
-        List<Book> books = new ArrayList<>();
-        String selectBook = "SELECT * FROM books";
-        PreparedStatement ps = connection.prepareStatement(selectBook);
-        ResultSet rs = ps.executeQuery();
+        User user = new User(username, contact);
 
-        while(rs.next()){
-            int bookNumber = rs.getInt("book_number");
-            String name = rs.getString("name");
-            int quantity = rs.getInt("quantity");
-            String author = rs.getString("author");
-            Book book = new Book(bookNumber, name, quantity, author);
-            books.add(book);
-        }
-
-        return books;
-    }
-
-    public static void insertBooks(Connection connection, Book book) throws SQLException {
-        String query = "INSERT INTO books( book_number, name, quantity, author) VALUES (?,?,?,?)";
-        PreparedStatement ps = connection.prepareStatement(query);
-        ps.setInt(1, book.getBookNumber());
-        ps.setString(2, book.getName());
-        ps.setInt(3, book.getQuantity());
-        ps.setString(4, book.getAuthor());
-
-        int rowsAffected = ps.executeUpdate();
-        if(rowsAffected > 0){
-            System.out.println("Book inserted successfully");
-        }else{
-            System.out.println("Failed to insert book");
-        }
-    }
-
-    public static  void insertUser(Connection connection, User user) throws SQLException {
-
-        String insertUserQuery = "INSERT INTO users(username,contact,borrow_count) VALUES(?,?,?);";
-        PreparedStatement ps2 = connection.prepareStatement(insertUserQuery);
-        ps2.setString(1,user.getUsername());
-        ps2.setString(2, user.getContact());
-        ps2.setInt(3, user.getBorrowCount());
-        if(ps2.executeUpdate() > 0 ){
-            System.out.println("User inserted successfully");
-        }else{
-            System.out.println("Failed to insert user");
+        try{
+            UserMethods.insertUser(connection, user);
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
         }
     }
 
+//    add book
+public static void addBook(Connection connection, Scanner input){
+    // Book book10 = new Book(110, "The Subtle Art of Not Giving a F*ck", 55, "Mark Manson");
+    System.out.println("Enter book number: ");
+    int bookNumber = input.nextInt();
+    input.nextLine();
+    System.out.println("Enter book name: ");
+    String name = input.nextLine();
+    System.out.println("Enter quantity: ");
+    int quantity = input.nextInt();
+    input.nextLine();
+    System.out.println("Enter author name: ");
+    String author = input.nextLine();
 
-
-
-
+    Book book = new Book(bookNumber, name, quantity,author);
+    try{
+    BookMethods.insertBooks(connection,book);
+    }catch (SQLException e){
+        System.out.println(e.getMessage());
+    }
+}
 
 
 
@@ -130,22 +123,7 @@ public class Library {
 ////        books.add(book1);
 ////        Book book2 = new Book(102, "Rich Dad Poor Dad", 45, "Robert Kiyosaki");
 ////        books.add(book2);
-////        Book book3 = new Book(103, "The Alchemist", 40, "Paulo Coelho");
-////        books.add(book3);
-////        Book book4 = new Book(104, "Think and Grow Rich", 55, "Napoleon Hill");
-////        books.add(book4);
-////        Book book5 = new Book(105, "The Psychology of Money", 60, "Morgan Housel");
-////        books.add(book5);
-////        Book book6 = new Book(106, "The 7 Habits of Highly Effective People", 70, "Stephen Covey");
-////        books.add(book6);
-////        Book book7 = new Book(107, "Start With Why", 65, "Simon Sinek");
-////        books.add(book7);
-////        Book book8 = new Book(108, "Deep Work", 50, "Cal Newport");
-////        books.add(book8);
-////        Book book9 = new Book(109, "Ikigai", 35, "Francesc Miralles");
-////        books.add(book9);
-////        Book book10 = new Book(110, "The Subtle Art of Not Giving a F*ck", 55, "Mark Manson");
-////        books.add(book10);
+//
 //
 //        //create user
 //        User user1 = new User("Yuvraj", "gmail");

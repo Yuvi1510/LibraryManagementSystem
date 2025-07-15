@@ -1,16 +1,24 @@
 public class User {
+    private int id;
     private String username;
     private String contact;
     private int borrowCount = 0;
 
-    public User(String username, String contact, int borrowCount){
+    public User(String username, String contact){
         this.username = username;
         this.contact = contact;
-        this.borrowCount = borrowCount;
     }
 
 
     // getter and setter
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getUsername() {
         return username;
     }
