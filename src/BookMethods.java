@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class BookMethods {
     // get book by book number
@@ -65,11 +66,11 @@ public class BookMethods {
         return books;
     }
 
-    public static void updateBookQuantity(Connection connection, int bookNumber, int quantity) throws SQLException {
-        String updateQuantity = "UPDATE books SET quantity=? WHERE book_number=?;";
+    public static void updateBookQuantity(Connection connection, int bookId, int quantity) throws SQLException {
+        String updateQuantity = "UPDATE books SET quantity=? WHERE book_id=?;";
         PreparedStatement ps = connection.prepareStatement(updateQuantity);
         ps.setInt(1,quantity);
-        ps.setInt(2, bookNumber);
+        ps.setInt(2, bookId);
 
         int rowsAffected = ps.executeUpdate();
 
@@ -81,5 +82,125 @@ public class BookMethods {
 
     }
 
+    // update book
+    // update user
+    public static boolean updateBookDetails(Connection connection, Book book) throws SQLException {
+        String query = "UPDATE books SET book_number=?, name=?, quantity=?, author=? WHERE book_id=?;";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setInt(1, book.getBookNumber());
+        ps.setString(2,book.getName());
+        ps.setInt(3, book.getQuantity());
+        ps.setString(4,book.getAuthor());
+        ps.setInt(5, book.getId());
+
+        int rowsAffected = ps.executeUpdate();
+
+        return rowsAffected > 0;
+    }
+
+
+    // update book
+    public static void updateBook(Connection connection, Scanner input){
+        System.out.println("Enter book number of book you want to update");
+        int bookNum = input.nextInt();
+        input.nextLine();
+
+        try{
+            Book book = BookMethods.getBookByBookNumber(connection, bookNum);
+
+            // ask user if they want to update this attribute
+            System.out.println("Update book number?(y/n)");
+            if(input.nextLine().equalsIgnoreCase("y")){
+                System.out.println("Enter new book number: ");
+                int newBookNumber = input.nextInt();
+                input.nextLine();
+                book.setBookNumber(newBookNumber);
+            }
+
+            System.out.println("Update book name?(y/n)");
+            if(input.nextLine().equalsIgnoreCase("y")){
+                System.out.println("Enter new name: ");
+                String newName = input.nextLine();
+                book.setName(newName);
+            }
+
+            System.out.println("Update book quantity?(y/n)");
+            if(input.nextLine().equalsIgnoreCase("y")){
+                System.out.println("Enter new quantity: ");
+                int newQuantity = input.nextInt();
+                input.nextLine();
+                book.setQuantity(newQuantity);
+            }
+
+            System.out.println("Update book author?(y/n)");
+            if(input.nextLine().equalsIgnoreCase("y")){
+                System.out.println("Enter new author name: ");
+                String newAuthorName = input.nextLine();
+                book.setAuthor(newAuthorName);
+            }
+
+            // pass the book object with updated attributes to the update method
+            if(BookMethods.updateBookDetails(connection, book)){
+                System.out.println("Book updated successfully!");
+            }else{
+                System.out.println("Failed to update book!");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //    add book
+    public static void addBook(Connection connection, Scanner input){
+        // Book book10 = new Book(110, "The Subtle Art of Not Giving a F*ck", 55, "Mark Manson");
+        System.out.println("Enter book number: ");
+        int bookNumber = input.nextInt();
+        input.nextLine();
+        System.out.println("Enter book name: ");
+        String name = input.nextLine();
+        System.out.println("Enter quantity: ");
+        int quantity = input.nextInt();
+        input.nextLine();
+        System.out.println("Enter author name: ");
+        String author = input.nextLine();
+
+        Book book = new Book(bookNumber, name, quantity,author);
+        try{
+            BookMethods.insertBooks(connection,book);
+            System.out.println("--------------------------------------------------------------------------");
+            System.out.println("--------------------------------------------------------------------------");
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
+
+    public  static  void showBooks(Connection connection) throws SQLException {
+        List<Book> books = BookMethods.selectBooks(connection);
+        for(Book book: books){
+            System.out.println(book.getBookNumber()+" - " + book.getName() + " by "+book.getAuthor());
+        }
+    }
+
+    // delete book
+    public static void deleteBook(Connection connection, Scanner input) throws SQLException {
+        System.out.println("Enter book number: ");
+        int bookNumber = input.nextInt();
+        input.nextLine();
+        String query = "DELETE FROM books WHERE book_number=?;";
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setInt(1, bookNumber);
+
+        int rowsAffected = ps.executeUpdate();
+
+        if(rowsAffected > 0){
+            System.out.println("Book deleted successfully");
+        }else {
+            System.out.println("Failed to delete book!");
+        }
+    }
 
 }

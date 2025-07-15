@@ -3,8 +3,11 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Scanner;
 
 public class RecordMethods {
+
     // insert records
     public static void insertRecord(Connection connection, int userId, int bookId) throws SQLException {
         String insertRecordQuery = "INSERT INTO `borrow_records`(user_id, book_id, date, return_status) VALUES (?,?,?,?);";
@@ -33,12 +36,14 @@ public class RecordMethods {
         int rowsAffected = ps.executeUpdate();
 
         if(rowsAffected > 0){
-            System.out.println("Book quantity updated successfully");
+            System.out.println("Return updated successfully");
         }else{
-            System.out.println("Failed to update book quantity");
+            System.out.println("Failed to update return");
         }
 
     }
+
+
 
 
 }

@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class UserMethods {
 //    get user by username
@@ -78,5 +79,37 @@ public class UserMethods {
     }
 
 
+    public static void deleteUser(Connection connection, Scanner input) throws SQLException {
+        System.out.println("Enter username: ");
+        String username = input.nextLine();
 
+        String query = "DELETE FROM users WHERE username=?;";
+
+        PreparedStatement ps = connection.prepareStatement(query);
+        ps.setString(1, username);
+
+        if(ps.executeUpdate() > 0){
+            System.out.println("User deleted successfully!");
+        }else {
+            System.out.println("Failed to delete user!");
+        }
+    }
+
+    // add user
+    public static void addUser(Connection connection, Scanner input){
+        System.out.print("Enter username: ");
+        String username = input.nextLine();
+        System.out.print("Enter contact: ");
+        String contact = input.nextLine();
+
+        User user = new User(username, contact);
+
+        try{
+            UserMethods.insertUser(connection, user);
+            System.out.println("--------------------------------------------------------------------------");
+            System.out.println("--------------------------------------------------------------------------");
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        }
+    }
 }
